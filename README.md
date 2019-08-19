@@ -49,6 +49,8 @@ class App extends Component {
 }
 ```
 
+> short circuit 특성에 의해 first half가 true일 때만 second half로 넘어가는 것을 이용하는 방법이라고 할 수 있다.
+
 - `IIFE(즉시 실행 함수 표현)` : 이외에 좀 더 복잡한 분기가 필요할 때
 
 ```javascript
@@ -319,4 +321,26 @@ JSX 방식
 ```
 
 - HTML과 다른 점
-  1. 이벤트 이름을 설정 할 때 camelCase 로 설정해야 한다. (`onclick` -> `onClick`)
+  1. 이벤트 이름을 설정 할 때 camelCase 로 설정해야 한다. (`onclick` -> `onClick`, `onmousedown` -> `onMouseDown`)
+  2. JSX 내에서 JS 함수를 전달해야 하니 `{}`로 감싼다.
+  3. 실행할 함수를 전달할 때 HTML 처럼 `즉시 실행`형태로 전달하지 않는다.
+     > React의 특성상 렌더링 -> 함수 호출 -> setState -> 렌더링 -> 함수 호출 -> 무한반복.. 하게 된다.
+
+## #5
+
+리액트 컴포넌트가 사용될 때 각 상황에 따라(각 타이밍에 따라) 호출되는 LifeCycle API가 존재한다.
+<br>
+
+### constructor
+
+- 최초 `render` 이전에, 컴포넌트가 생성될 때 1회 호출된다.
+
+### componentDidMount
+
+- 컴포넌트가 화면에 mount(최초로 render)되었을 때 호출된다.
+- `render` 이후에 호출된다. (리렌더링 후에는 호출되지 않음!!)
+
+### componentDidUpdate
+
+- 컴포넌트가 다시 render되었을 때 호출된다.
+- `render` 이후에 호출된다. (mount - 최초 render되었을 때는 호출되지 않음!!)
