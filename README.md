@@ -512,5 +512,61 @@ class PhoneInfo extends Component {
 
 ### PhoneInfoList : 여러 개의 PhoneInfo 컴포넌트들을 보여주는 컴포넌트
 
-- 하나의 컴포넌트에서 여러 개의 자식 컴포넌트를 호출할 때는 `map`을 사용해서 접근하면 되고, 호출되는 각 컴포넌트들은 React가 구분할 수 있어야 하기 때문에 고유의 `key` prop을 지정해야 한다.
+- `하나의 컴포넌트에서 여러 개의 자식 컴포넌트를 호출할 때`는 `map`을 사용해서 접근하면 되고, 호출되는 각 컴포넌트들은 React가 구분할 수 있어야 하기 때문에 고유의 `key` prop을 지정해야 한다.
   - 보통의 경우 고유 `id`를 부여하지만 존재하지 않는 경우 `map` 콜백의 두 번째 파라미터인 `index`를 `key` prop으로 지정하는 방법이 있다.
+
+## #8 배열 다루기 (2) 제거와 수정
+
+### `slice`와 `splice`
+
+```javascript
+let arr1 = [1, 2, 3, 4, 5];
+let arr2 = arr1.slice(3, 5);
+console.log(arr1); // [1, 2, 3, 4, 5]
+console.log(arr2); // [4, 5]
+```
+
+- `slice`는 `반 열린구간`을 지정하여 배열을 반환하는 함수이다. 위의 예시에서는 `[3, 5) 구간`의 값으로 배열을 반환한다.
+- `slice`의 target인 `arr1`은 변하지 않는다.
+
+```javascript
+let arr1 = [1, 2, 3, 4, 5];
+let arr2 = arr1.splice(2, 2);
+console.log(arr1); // [1, 2, 5]
+console.log(arr2); // [3, 4]
+```
+
+- `splice`는 `(startIndex, length)`를 입력 받아 `length` 크기 만큼 배열을 반환한다.
+- `splice`의 target인 `arr1`은 destination인 `arr2`만큼 제거된다.
+
+### `slice`와 `concat`
+
+- 이 둘을 활용해서 각 구간을 잘라서 합칠 수 있다.
+
+### `filter`의 활용
+
+- `Array.prototype.filter`는 filter를 통과(`true`가 `return`)되는 요소들만을 배열로 반환하는 함수이다.
+- 이를 활용해서 조건에 맞지 않는(`false`가 `return`)배열 요소를 제거할 수 있다.
+
+### 전화번호 제거
+
+- `전화번호부`라는 루트 컴포넌트(?)에 속한 데이터를 `전화번호 목록 1개`라는 최하위 컴포넌트에 의해 수정해야 한다.
+  - `수정의 대상`과 `기능의 동작`이 서로 다른 컴포넌트에서 이루어진다.
+    - `수정의 대상`은 `App`의 데이터
+    - `기능의 동작`은 `PhoneInfo`의 함수 실행
+  - 이러한 경우에, `수정의 대상`이 존재하는 컴포넌트에서 함수를 정의하고 `기능의 동작`이 존재하는 컴포넌트까지 `props`로 넘겨 받아서 사용해야 한다.
+
+### Computed property names
+
+- 표현식(변수, 함수 등 모두 가능)을 통해 key를 지정하는 방법
+
+```javascript
+handleChange = e => {
+  const { name, value } = e.target;
+  this.setState({
+    [name]: value // Computed property names : 표현식(변수, 함수 등 모두 가능)을 통해 key를 지정하는 방법
+  });
+};
+```
+
+위 코드에서는 `name`이 변수이기 때문에 `setState`에 넘겨줄 객체의 `key`로 지정할 수 없다. 이를 해결하기 위해 ES6 문법으로 `Computed property names`가 등장했다. `[]` 안에 변수나 함수 등의 표현식을 사용하여 `key`를 지정할 수 있게 되었다.
