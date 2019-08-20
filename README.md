@@ -577,7 +577,7 @@ handleChange = e => {
 
 ### `componentDidUpdate`의 파라미터 `prevProps`, `prevState`
 
-- componentDidUpdate는 컴포넌트가 최초가 아닌, 업데이트 시의 `render` 직후에 호출되며 `prevProps`, `prevState`를 파라미터로 갖는다.
+- `componentDidUpdate`는 컴포넌트가 최초가 아닌, 업데이트 시의 `render` 직후에 호출되며 `prevProps`, `prevState`를 파라미터로 갖는다.
 - `prevProps` : `props`가 수정되었다는 것은 부모 컴포넌트에 의해 다시 호출되었다는 뜻(?). (그래서 잘 변할 것 같지 않은 느낌이지만..) 이번 `props`의 업데이트 이전의 `props`의 값(`setState`와는 관계 없는 듯..)
 - `prevState` : 이번 업데이트의 `setState` 직전에 `setState`되었던 값
 - `immutable`한 개념인 것 같다.
@@ -725,11 +725,11 @@ class PhoneInfoList extends Component {
 
 `App`의 바로 직계 자식 컴포넌트인 `PhoneInfoList`에서 `shouldComponentUpdate`를 구현했다. `shouldComponentUpdate`는 `props`의 변화가 발생했을 때 `render` 이전에 먼저 호출되어 업데이트 과정을 시작할 지 결정하도록 할 수 있다. (`true`를 `return`하도록 구성하면 업데이트가 진행된다.)
 
-<p>또한 `shouldComponentUpdate`는 `props`의 변화 이후 실행되므로 변화된 값인 `nextProps`, `nextState`를 파라미터로 받아 `setState`하기 전에 넘겨 받은 값을 비교할 수 있다. (`state`의 변경 시에도 `shouldComponentUpdate`를 통해 리렌더링을 결정할 수 있다.)
+<br>또한 `shouldComponentUpdate`는 `props`의 변화 이후 실행되므로 변화된 값인 `nextProps`, `nextState`를 파라미터로 받아 `setState`하기 전에 넘겨 받은 값을 비교할 수 있다. (`state`의 변경 시에도 `shouldComponentUpdate`를 통해 리렌더링을 결정할 수 있다.)
 
-<p>물론 `shouldComponentUpdate`가 없으면 바로 업데이트가 진행될 것이다.
+<br>물론 `shouldComponentUpdate`가 없으면 바로 업데이트가 진행될 것이다.
 
-<p>아무튼 이제 `shouldComponentUpdate` 부분에 의해 변화가 필요하지 않을 때(data가 달라지지 않은 경우) 렌더링이 발생하지 않게 되었다.
+<br>아무튼 이제 `shouldComponentUpdate` 부분에 의해 변화가 필요하지 않을 때(data가 달라지지 않은 경우) 렌더링이 발생하지 않게 되었다.
 
 > `shouldComponentUpdate`가 단지 `true` / `false`를 반환할 뿐인데 어떻게 이런 것들이 가능한가?
 
