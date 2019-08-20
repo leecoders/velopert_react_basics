@@ -264,7 +264,7 @@ this.setState({
 });
 ```
 
-이 경우에서는, 위와 같이 `setState`에 `foo` 객체의 수정을 시도할 때 `foobar`만을 찾아서 수정하고 `bar`는 그대로 남아있지는 않는다. 객체 state는 덮어 씌워진다.
+이 경우에서는, 위와 같이 `setState`에 `foo` 객체의 수정을 시도할 때 `foobar`만을 찾아서 수정하고 기대했던 것처럼 `bar`는 그대로 남아있지는 않는다. 객체 state는 덮어 씌워진다.
 
 ```javascript
 this.setState({
@@ -276,7 +276,40 @@ this.setState({
 });
 ```
 
-위와 같이 `...`라는 JS의 문법인 `전개연산자`를 사용하면 해결할 수는 있다.
+위와 같이 `...`라는 JS의 문법인 `전개연산자`(또는 `전개 구문`)를 사용하면 해결할 수는 있다.
+
+> 이렇게 하면 새로운 객체에 `foobar` prop이 두 번 정의되는데 어떻게 가능할까?
+
+```javascript
+const obj = {
+  name: "old",
+  name: "new"
+};
+console.log(obj); // {name: "new"}
+```
+
+위와 같이 같은 이름의 prop이 두 번 정의되면 마지막 값으로 결정된다!
+
+> `전개 구문`은 배열에만 사용하는 것이 아니었나?
+
+객체에서도 사용할 수 있다!
+
+```javascript
+const obj1 = { x: 1, y: 2 };
+console.log(...obj1); // Error!
+```
+
+다만 위의 방식처럼 사용할 수는 없다! (iterator에 관련된 에러 메시지 출력)
+
+이렇게 해야된다.
+
+```javascript
+const obj1 = { x: 1, y: 2 };
+const obj2 = { ...obj1, z: 3 };
+console.log(obj2);
+```
+
+객체의 prop들에 순차적으로 접근하여 다른 객체 내부에서 할당할 때(?)만 사용가능 한 것 같다.. (추가 공부가 필요함)
 
 **`setState` 내에서 외부 state에 의존하지 않는 좋은 방법**
 
@@ -344,3 +377,140 @@ JSX 방식
 
 - 컴포넌트가 다시 render되었을 때 호출된다.
 - `render` 이후에 호출된다. (mount - 최초 render되었을 때는 호출되지 않음!!)
+
+## #6 전화번호부 프로젝트 시작
+
+### `onChange`는 데이터 변경 이벤트 처리를 위한 prop
+
+- `prop`으로 함수를 등록하면 이벤트 발생 시 `이벤트 객체`가 이벤트에 등록된 함수의 인자로 넘어간다.
+
+### form 태그의 `action` prop은 페이지 이동, `onSubmit` prop은 submit 이벤트 발생 시 실행할 함수 등록
+
+- React에서는 데이터 변경 시 페이지 이동 또는 새로고침이 아니기 때문에 `onSubmit`을 사용해야 한다.
+- `e.preventDefault()` : form 에서 submit 이 발생하면 페이지를 다시 불러오게 되는데, 그렇게 되면 현재 페이지가 지니고있는 상태를 잃어버리게 되기 때문에 이를 통해서 방지해주었습니다.
+
+### 자식 컴포넌트 -> 부모 컴포넌트 데이터 이동하는 방법
+
+1. 부모 컴포넌트에 파라미터가 지정된 함수를 정의하고 자식 컴포넌트를 호출하며 `props`로 함수 객체를 전달한다.
+2. 자식 컴포넌트에서는 `this.props`로 넘겨 받은 부모 컴포넌트의 함수에 인자를 전달하며 호출한다.
+3. 부모 컴포넌트의 함수가 실행된다.
+
+## #7 배열 다루기
+
+### 불변성 유지
+
+> React에서 불변성 유지가 필요한 이유는 불변성을 유지해야 모든 것들이 적절한 상황에 리렌더링되도록 설계할 수 있기 때문이다. 또한 이것들이 나중에 성능 최적화에 큰 영향을 미친다.
+
+- React에서는 state 내부의 값을 직접적으로 수정하면 절대로 안된다.
+  - `Array.prototype`의 배열을 수정하는 함수들은 배열 내부의 값을 직접적으로 수정하기 때문에 사용할 수 없다.
+
+### `전개 구문`과 `Rest 파라미터`를 헷갈리지 말자
+
+> `전개 구문`은 전달(또는 출력)할 때 spread! `Rest 파라미터`는 전달받을(또는 입력) 때 spread!
+
+- 앞에서 `전개 연산자`(또는 `spread 연산자`)라고 설명했던 `...`는 인자를 전달 받는 함수의 `Rest 파라미터`와 비슷하다.
+  - `Rest 파라미터`를 사용하면 함수의 파라미터로 오는 값들을 `배열`로 전달받을 수 있다.
+  ```javascript
+  function foo(num1, num2, ...data) {
+    console.log(data); // [3, 4, 5]
+  }
+  foo(1, 2, 3, 4, 5);
+  ```
+  - 아래와 같이 사용할 수도 있다.
+  ```javascript
+  let num1, num2, data;
+  [num1, num2, ...data] = [1, 2, 3, 4, 5];
+  console.log(data); // [3, 4, 5];
+  ```
+  - `전개 연산자`는 배열의 가장 바깥 bracket을 제거하여 전개해준다.
+  ```javascript
+  const data = [1, 2, 3, 4, 5];
+  console.log(...data); // 1 2 3 4 5
+  ```
+  - 아래와 같이 사용할 수도 있다.
+  ```javascript
+  function foo(a, b, c) {
+    const x = a;
+    const y = b;
+    const z = c;
+    console.log(x, y, z); // 1 2 3
+  }
+  foo(...[1, 2, 3]); // 1 2 3 으로 전개되어 세 개의 인자가 전달된다.
+  ```
+- 아무튼, 아래 코드에서는 `전개 구문`의 여러 case들 중에서 앞에서 설명했던 `객체에 순차적으로 접근하여 새로운 객체에 할당`의 방식이 적용된 것을 알 수 있다.
+
+```javascript
+handleCreate = data => {
+  const { information } = this.state;
+  this.setState({
+    information: information.concat({ id: this.id++, ...data })
+  });
+};
+```
+
+화살표 함수의 파라미터로 전달된 `data`는 `PhoneForm` 컴포넌트의 `state` 객체이다. `...`를 사용해 이 객체를 순차 접근하여 새로운 객체에 할당하는 것을 알 수 있다.
+
+### 클래스 내부 변수 선언이 가능하다.
+
+```javascript
+class App extends Component {
+  id = 2
+  state = {
+    information: [
+      {
+        id: 0,
+        name: '김민준',
+        phone: '010-0000-0000'
+      },
+      {
+        id: 1,
+        name: '홍길동',
+        phone: '010-0000-0001'
+      }
+    ]
+  }
+...
+```
+
+- 위의 코드처럼 컴포넌트 내부에서는 필요하지만 화면에 렌더링될 필요는 없는 것은 `클래스 내부 변수`로 선언하여 사용한다.
+
+### PhoneInfo: 각 전화번호 정보를 보여주는 컴포넌트
+
+```javascript
+class PhoneInfo extends Component {
+  static defaultProps = {
+    info: {
+      name: "이름",
+      phone: "010-0000-0000",
+      id: 0
+    }
+  };
+
+  render() {
+    const style = {
+      border: "1px solid black",
+      padding: "8px",
+      margin: "8px"
+    };
+
+    const { name, phone, id } = this.props.info; // info가 undefined일 수도 있다.
+
+    return (
+      <div style={style}>
+        <div>
+          <b>{name}</b>
+        </div>
+        <div>{phone}</div>
+      </div>
+    );
+  }
+}
+```
+
+- `비구조화 할당` 시에 `his.props.info`의 값이 `undefined`이면 에러 가능성이 있기 때문에 `static defaultProps`을 지정한다.
+- `style 객체`를 `<div>`태그의 `style prop`으로 전달하여 CSS를 지정한다.
+
+### PhoneInfoList : 여러 개의 PhoneInfo 컴포넌트들을 보여주는 컴포넌트
+
+- 하나의 컴포넌트에서 여러 개의 자식 컴포넌트를 호출할 때는 `map`을 사용해서 접근하면 되고, 호출되는 각 컴포넌트들은 React가 구분할 수 있어야 하기 때문에 고유의 `key` prop을 지정해야 한다.
+  - 보통의 경우 고유 `id`를 부여하지만 존재하지 않는 경우 `map` 콜백의 두 번째 파라미터인 `index`를 `key` prop으로 지정하는 방법이 있다.
