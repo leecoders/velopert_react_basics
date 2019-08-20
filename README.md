@@ -767,9 +767,9 @@ render() {
 
 `App`의 `render`에 `keyword`를 통해 `filteredList`를 생성하고 `PhoneInfoList` 컴포넌트에 전달하도록 수정하였다.
 
-<p>`indexOf`는 문자열 포함 여부를 검사하여 처음 발견된 `index`를 반환한다. 탐색에 실패하면 `-1`을 반환한다.
+<br>`indexOf`는 문자열 포함 여부를 검사하여 처음 발견된 `index`를 반환한다. 탐색에 실패하면 `-1`을 반환한다.
 
-<p>`keyword`에 의해서가 아닌 새로운 전화번호를 등록하는 과정(`keyword`가 공백`""`일 때)에서도 `filteredList`를 전달해도 괜찮을까 의문이 들었으나 `공백`을 검사하는 경우 경우 `0`을 반환하는 것을 알 수 있었다. (모든 문자열에 대해 `0`이 반환되어 `filteredList` 자체가 원본 데이터가 됨)
+<br>`keyword`에 의해서가 아닌 새로운 전화번호를 등록하는 과정(`keyword`가 공백`""`일 때)에서도 `filteredList`를 전달해도 괜찮을까 의문이 들었으나 `공백`을 검사하는 경우 경우 `0`을 반환하는 것을 알 수 있었다. (모든 문자열에 대해 `0`이 반환되어 `filteredList` 자체가 원본 데이터가 됨)
 
 ```javascript
 const str = "abc";
