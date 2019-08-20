@@ -35,12 +35,14 @@ class PhoneInfo extends Component {
   // componentDidUpdate의 인자인가봄.. props, state의 immutable 값이 prev에 저장되어 있는 듯..
   componentDidUpdate(prevProps, prevState) {
     const { info, onUpdate } = this.props;
+    // 전 상태와 현 상태가 다른 경우(1)
     if (!prevState.editing && this.state.editing) {
       this.setState({
         name: info.name,
         phone: info.phone
       });
     }
+    // 전 상태와 현 상태가 다른 경우(2)
     if (prevState.editing && !this.state.editing) {
       onUpdate(info.id, {
         name: this.state.name,

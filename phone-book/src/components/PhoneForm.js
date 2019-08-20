@@ -7,8 +7,9 @@ class PhoneForm extends Component {
   };
   handleChange = e => {
     // `e`는 이벤트 객체로 이벤트 발생 시 넘겨 받음
+    const { name, value } = e.target;
     this.setState({
-      [e.target.name]: e.target.value // Computed property names : 표현식(변수, 함수 등 모두 가능)을 통해 key를 지정하는 방법
+      [name]: value // Computed property names : 표현식(변수, 함수 등 모두 가능)을 통해 key를 지정하는 방법
     });
   };
   handleSubmit = e => {

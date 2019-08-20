@@ -570,3 +570,101 @@ handleChange = e => {
 ```
 
 위 코드에서는 `name`이 변수이기 때문에 `setState`에 넘겨줄 객체의 `key`로 지정할 수 없다. 이를 해결하기 위해 ES6 문법으로 `Computed property names`가 등장했다. `[]` 안에 변수나 함수 등의 표현식을 사용하여 `key`를 지정할 수 있게 되었다.
+
+### `componentDidUpdate`의 파라미터 `prevProps`, `prevState`
+
+- componentDidUpdate는 컴포넌트가 최초가 아닌, 업데이트 시의 `render` 직후에 호출되며 `prevProps`, `prevState`를 파라미터로 갖는다.
+- `prevProps` : `props`가 수정되었다는 것은 부모 컴포넌트에 의해 다시 호출되었다는 뜻(?). (그래서 잘 변할 것 같지 않은 느낌이지만..) 이번 `props`의 업데이트 이전의 `props`의 값(`setState`와는 관계 없는 듯..)
+- `prevState` : 이번 업데이트의 `setState` 직전에 `setState`되었던 값
+- `immutable`한 개념인 것 같다.
+
+### `수정 중`인지 여부에 대한 상태를 나타내는 `editing` toggle(상태 변화를 의미)을 통해 다른 화면을 렌더링
+
+- `PhoneInfo` 컴포넌트의 `state`에 `editing`과 함께 유동적인 input 값을 다루기 위해 `name`, `phone`이 존재
+
+```javascript
+state = {
+  editing: false,
+  name: "",
+  phone: ""
+};
+```
+
+- `상태 변화`(`state`의 `editing` 수정) 기능을 동작시킬 toggle 함수
+
+```javascript
+handleToggleEdit = () => {
+  const { editing } = this.state;
+  this.setState({ editing: !editing });
+};
+```
+
+- `onChange`만으로도 화면이 리렌더링(`setState`에 의해)되지만 `handleToggleEdit`에 의해 리렌더링되었을 때도 `componentDidUpdate`가 호출되는데 어느 경우에 `handleToggleEdit`에 의해 `setState`가 실행되었는지 확인하기 위해 `prevState`와 `this.state`의 `editing`이 다를 때(두 가지 경우 뿐!!)를 체크하도록 했다.
+  - (1)의 경우(수정 시작) : `phoneInfo`가 호출될 때 `props`로 넘겨 받은 `info`의 객체로 `name`, `phone`을 지정한다.
+  - (2)의 경우(수정 완료) : 마지막 `onChange`에 의해 `setState`된 `state`의 객체로 `name`, `phone`을 지정한다.
+
+```javascript
+  componentDidUpdate(prevProps, prevState) {
+    const { info, onUpdate } = this.props;
+    // 전 상태와 현 상태가 다른 경우(1) - 수정 x -> 수정 중
+    if (!prevState.editing && this.state.editing) {
+      this.setState({
+        name: info.name,
+        phone: info.phone
+      });
+    }
+    // 전 상태와 현 상태가 다른 경우(2) - 수정 중 -> 수정 x
+    if (prevState.editing && !this.state.editing) {
+      onUpdate(info.id, {
+        name: this.state.name,
+        phone: this.state.phone
+      });
+    }
+  }
+```
+
+- `수정 모드` / `일반 모드`로 나누어 다른 화면을 렌더링하도록 한다.
+
+```javascript
+const { editing } = this.state; // 현재의 editing 값을 먼저 받아옴
+
+// 수정모드
+if (editing) {
+  return (
+    <div style={style}>
+      <div>
+        <input
+          value={this.state.name}
+          name="name"
+          placeholder="이름"
+          onChange={this.handleChange}
+        />
+      </div>
+      <div>
+        <input
+          value={this.state.phone}
+          name="phone"
+          placeholder="전화번호"
+          onChange={this.handleChange}
+        />
+      </div>
+      <button onClick={this.handleToggleEdit}>적용</button>
+      <button onClick={this.handleRemove}>삭제</button>
+    </div>
+  );
+}
+
+// 일반 모드
+const { name, phone } = this.props.info; // info가 undefined일 수도 있다.
+
+return (
+  <div style={style}>
+    <div>
+      <b>{name}</b>
+    </div>
+    <div>{phone}</div>
+    <button onClick={this.handleToggleEdit}>수정</button>
+    <button onClick={this.handleRemove}>삭제</button>
+  </div>
+);
+```
