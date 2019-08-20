@@ -16,7 +16,13 @@ class App extends Component {
         name: "ㅋㅋㅋ",
         phone: "010-0000-0001"
       }
-    ]
+    ],
+    keyword: ""
+  };
+  handleChange = e => {
+    this.setState({
+      keyword: e.target.value
+    });
   };
   handleCreate = data => {
     const { information } = this.state;
@@ -39,12 +45,24 @@ class App extends Component {
     });
   };
   render() {
-    const { information } = this.state;
+    const { information, keyword } = this.state;
+    const filteredList = information.filter(
+      info => info.name.indexOf(keyword) !== -1 // keyword를 통해 필터링 진행
+    );
     return (
       <div>
         <PhoneForm onCreate={this.handleCreate} />
+
+        <p>
+          <input
+            placeholder="검색할 이름을 입력하세요.."
+            onChange={this.handleChange}
+            value={keyword}
+          />
+        </p>
+        <hr />
         <PhoneInfoList
-          data={this.state.information}
+          data={filteredList} // 필터링된 결과를 전달! (keyword가 공백이면 모든 문자열에 공백이 포함되어 있으니 원본 전송됨)
           onRemove={this.handleRemove}
           onUpdate={this.handleUpdate}
         />

@@ -378,6 +378,10 @@ JSX 방식
 - 컴포넌트가 다시 render되었을 때 호출된다.
 - `render` 이후에 호출된다. (mount - 최초 render되었을 때는 호출되지 않음!!)
 
+> 컴포넌트를 생성 할 때는 constructor -> componentWillMount -> render -> componentDidMount 순으로 진행됩니다. <p>컴포넌트를 제거 할 때는 componentWillUnmount 메소드만 실행됩니다. <p>컴포넌트의 prop이 변경될 때엔 componentWillReceiveProps -> shouldComponentUpdate -> componentWillUpdate-> render -> componentDidUpdate 순으로 진행됩니다. <p>이 예제에는 없지만 state가 변경될 때엔 props 를 받았을 때 와 비슷하지만 shouldComponentUpdate 부터 시작됩니다.
+
+![LifeCycle API](https://velopert.com/wp-content/uploads/2016/03/Screenshot-from-2016-12-10-00-21-26-1.png)
+
 ## #6 전화번호부 프로젝트 시작
 
 ### `onChange`는 데이터 변경 이벤트 처리를 위한 prop
@@ -668,3 +672,129 @@ return (
   </div>
 );
 ```
+
+## #9 불변성을 지키는 이유와 업데이트 최적화
+
+`state` 내부의 값을 변경하지 않고 새로운 객체로 갈아 끼우는 `setState`를 `불변성`을 지키는 것이라고 했다.
+
+### 데이터 필터링 : 불변성의 중요성을 알아보기 위해 이름으로 전화번호를 찾는 데이터 필터링 기능을 구현해보자.
+
+- (리마인드) `keyword`를 입력하는 `input`을 하나 더 추가하고 이에 대한 `onChange`를 추가로 다루게 되면서 `App` 컴포넌트에 없었던 `handleChange`를 복붙하게 되었다. 그러던 중 갑자기 `PhoneInfo`에서 `handleChange`라는 이벤트 핸들러 하나로 다른 `key-value`쌍에 대해 유연하게 처리하는 방식에 다시 한 번 소름이 돋았다.
+
+`handleChange` 코드를 리마인드하자..
+
+```javascript
+handleChange = e => {
+  const { name, value } = e.target;
+  this.setState({
+    [name]: value // Computed property names : 표현식(변수, 함수 등 모두 가능)을 통해 key를 지정하는 방법
+  });
+};
+```
+
+- 본론으로 돌아와서, 필터링 기능을 구현하기 전에 알아야 할 중요한 것은 App 컴포넌트의 상태가 업데이트 되면, 컴포넌트의 리렌더링이 발생하게 되고, 컴포넌트가 리렌더링되면 그 컴포넌트의 자식 컴포넌트도 리렌더링된다는 것이다.
+  - 물론 이 상황에서 눈에 띄게 의미가 있지 않지만, 리스트 내부의 아이템이 몇백 개, 몇천 개가 된다면 이렇게 `Virtual DOM` 에 렌더링 하는 자원을 낭비하게 될 수도 있다.
+  - 이를 해결하기 위해 `shouldComponentUpdate`를 사용할 수 있다.
+
+```javascript
+class PhoneInfoList extends Component {
+  static defaultProps = {
+    data: [],
+    onRemove: () => console.log("onRemove not defined"),
+    onUpdate: () => console.log("onUpdate not defined")
+  };
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return nextProps.data !== this.props.data; // true일 때만 업데이트 진행
+  }
+
+  render() {
+    const { data, onRemove, onUpdate } = this.props;
+    const list = data.map(info => (
+      <PhoneInfo
+        key={info.id}
+        info={info}
+        onRemove={onRemove}
+        onUpdate={onUpdate}
+      />
+    ));
+    return <div>{list}</div>;
+  }
+}
+```
+
+`App`의 바로 직계 자식 컴포넌트인 `PhoneInfoList`에서 `shouldComponentUpdate`를 구현했다. `shouldComponentUpdate`는 `props`의 변화가 발생했을 때 `render` 이전에 먼저 호출되어 업데이트 과정을 시작할 지 결정하도록 할 수 있다. (`true`를 `return`하도록 구성하면 업데이트가 진행된다.)
+
+<p>또한 `shouldComponentUpdate`는 `props`의 변화 이후 실행되므로 변화된 값인 `nextProps`, `nextState`를 파라미터로 받아 `setState`하기 전에 넘겨 받은 값을 비교할 수 있다. (`state`의 변경 시에도 `shouldComponentUpdate`를 통해 리렌더링을 결정할 수 있다.)
+
+<p>물론 `shouldComponentUpdate`가 없으면 바로 업데이트가 진행될 것이다.
+
+<p>아무튼 이제 `shouldComponentUpdate` 부분에 의해 변화가 필요하지 않을 때(data가 달라지지 않은 경우) 렌더링이 발생하지 않게 되었다.
+
+> `shouldComponentUpdate`가 단지 `true` / `false`를 반환할 뿐인데 어떻게 이런 것들이 가능한가?
+
+`불변성`을 지켰기 때문이다. (변화되기 전의 값이 어딘가에 저장되어 있을까?)
+
+- `App`에서 `keyword` 값에 따라서 `information` 배열을 필터링 해주는 로직을 작성하고, 필터링된 결과를 `PhoneInfoList` 에 전달하도록 구현하자.
+
+```javascript
+render() {
+    const { information, keyword } = this.state;
+    const filteredList = information.filter(
+      info => info.name.indexOf(keyword) !== -1 // keyword를 통해 필터링 진행
+    );
+    return (
+      <div>
+        <PhoneForm onCreate={this.handleCreate} />
+
+        <p>
+          <input
+            placeholder="검색할 이름을 입력하세요.."
+            onChange={this.handleChange}
+            value={keyword}
+          />
+        </p>
+        <hr />
+        <PhoneInfoList
+          data={filteredList} // 필터링된 결과를 전달! (keyword가 공백이면 모든 문자열에 공백이 포함되어 있으니 원본 전송됨)
+          onRemove={this.handleRemove}
+          onUpdate={this.handleUpdate}
+        />
+      </div>
+    );
+  }
+```
+
+`App`의 `render`에 `keyword`를 통해 `filteredList`를 생성하고 `PhoneInfoList` 컴포넌트에 전달하도록 수정하였다.
+
+<p>`indexOf`는 문자열 포함 여부를 검사하여 처음 발견된 `index`를 반환한다. 탐색에 실패하면 `-1`을 반환한다.
+
+<p>`keyword`에 의해서가 아닌 새로운 전화번호를 등록하는 과정(`keyword`가 공백`""`일 때)에서도 `filteredList`를 전달해도 괜찮을까 의문이 들었으나 `공백`을 검사하는 경우 경우 `0`을 반환하는 것을 알 수 있었다. (모든 문자열에 대해 `0`이 반환되어 `filteredList` 자체가 원본 데이터가 됨)
+
+```javascript
+const str = "abc";
+console.log(str.indexOf("")); // 0
+```
+
+### `shouldComponentUpdate`를 활용하여 한 번 더 최적화에 대해 고민
+
+- `PhoneInfo`의 `render` 안에 `console.log("render PhoneInfo " + this.props.info.id);`를 추가하고 새로운 전화번호가 추가될 때 리렌더링되는 `PhoneInfo`를 확인 -> 처음부터 끝까지 다시 한 번 렌더링된다.
+- `App`에서 전화번호 추가로 부터 시작하여 `PhoneInfoList`가 갱신되고 자식 컴포넌트인 `PhoneInfo`가 호출될 때, `PhoneInfo`에서 변화되지 않은 `info`에 대해서는 리렌더링하지 않도록 할 수 있다.
+  - 직계 부모 컴포넌트 `PhoneInfoList`에 의해 호출될 때 `shouldComponentUpdate`를 통해 `nextProps`와 `this.props`의 `info`가 다른지 비교할 수 있다. (단, `editing` 중일 때에도 `shouldComponentUpdate`가 호출되므로 예외 처리해주어야 한다.)
+
+```javascript
+  shouldComponentUpdate(nextProps, nextState) {
+    // 수정 상태가 아니고, info 값이 같다면 리렌더링 안함 (수정 상태에는 리렌더링 해야 함)
+    if (
+      !this.state.editing &&
+      !nextState.editing &&
+      nextProps.info === this.props.info
+    ) {
+      return false;
+    }
+    // 나머지 경우엔 리렌더링함
+    return true;
+  }
+```
+
+수정 중일 때를 제외한 것을 알 수 있다.
